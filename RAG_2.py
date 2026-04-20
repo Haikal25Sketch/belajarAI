@@ -106,17 +106,40 @@ def input_user():
 
 load_dotenv()
 data = load_data("pengetahuan.txt")
-database = []
-for text in data:
-    database.append({
-    "text":text,
-    "embeddings":get_embeddings([text])[0]
-    })
 
 
-#Simpan dan akses data json
-simpan("Database_RAG.json",database)
-data_awal = ambil("Database_RAG.json")
+#Cek keberadaan database,kalo ada gaperlu request ke Huggingface lagi
+if os.path.exists("Database_RAG.json"):
+    data_awal = ambil("Database_RAG.json")
+    if len(data) != len(data_awal): #Antisipasi jika ada perubahan pada database
+        database = []
+
+        for text in data:
+            database.append({
+            "text":text,
+            "embeddings":get_embeddings([text])[0]
+            })
+
+            #Simpan dan akses data json
+            simpan("Database_RAG.json",database)
+            data_awal = ambil("Database_RAG.json")
+    else:
+        data_awal = ambil("Database_RAG.json")
+
+else:
+    database = []
+
+    for text in data:
+        database.append({
+        "text":text,
+        "embeddings":get_embeddings([text])[0]
+        })
+
+        #Simpan dan akses data json
+        simpan("Database_RAG.json",database)
+        data_awal = ambil("Database_RAG.json")
+
+
 
 user = input_user()
 
@@ -157,6 +180,7 @@ groq_data = {
         }
         ]
 }
+
 try:
     response = requests.post("https://api.groq.com/openai/v1/chat/completions",
     headers=groq_headers,json=groq_data)
