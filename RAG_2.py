@@ -141,58 +141,71 @@ else:
 
 
 
-user = input_user()
+# --- LOOP PERTANYAAN BERULANG ---
+while True:
+    user = input("\nMasukkan pertanyaan (ketik 'keluar' untuk berhenti): ")
 
-user_embedding = get_embeddings([user])[0]
+    if user.lower() in ['keluar', 'exit', 'quit']:
+        print("Terima kasih! Sampai jumpa.")
+        break
 
-#Cari yang terbaik,termirip dan simpan hasilnya
-hasil_pencarian = []
+    if not user.strip():
+        continue
 
-for emb in data_awal:
-    vec = emb["embeddings"]
-    teks = emb["text"]
-    skor = banding(vec, user_embedding)
-    hasil_pencarian.append({"skor": skor, "text": teks})
+    # Ambil embedding untuk pertanyaan baru
+    res_embeddings = get_embeddings([user])
+    if not res_embeddings:
+        continue
+    user_embedding = res_embeddings[0]
 
-# Diurutkan berdasarkan SKOR (bukan teks) dari besar ke kecil
-hasil_pencarian.sort(key=lambda x: x["skor"], reverse=True)
+    #Cari yang terbaik,termirip dan simpan hasilnya
+    hasil_pencarian = []
 
-# Ambil 5 terbaik
-top_search = hasil_pencarian[:5]
+    for emb in data_awal:
+        vec = emb["embeddings"]
+        teks = emb["text"]
+        skor = banding(vec, user_embedding)
+        hasil_pencarian.append({"skor": skor, "text": teks})
 
-# Gabungkan teksnya
-context_gabungan = "\n".join([item["text"] for item in top_search])
+    # Diurutkan berdasarkan SKOR (bukan teks) dari besar ke kecil
+    hasil_pencarian.sort(key=lambda x: x["skor"], reverse=True)
 
-groq_token = os.getenv("GROQ_API_KEY")
+    # Ambil 5 terbaik
+    top_search = hasil_pencarian[:5]
 
-groq_headers = {
-        "Authorization": f"Bearer {groq_token}",
-        "Content-Type": "application/json"
-}
+    # Gabungkan teksnya
+    context_gabungan = "\n".join([item["text"] for item in top_search])
 
-groq_data = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [
-        {"role":"system",
-        "content":"Kamu adalah asisten pribadi yang akan menjawab pertanyaan berdasarkan data yang saya berikan,jika yang aku tanyakan tidak ada dalam data yang saya berikan,jawab sesuai dengan pengetahuan umummu"},
-        {"role":"user",
-        "content":f"KONTEKS:\n{context_gabungan}\n\nPERTANYAAN: {user}"
-        }
-        ]
-}
+    groq_token = os.getenv("GROQ_API_KEY")
 
-try:
-    response = requests.post("https://api.groq.com/openai/v1/chat/completions",
-    headers=groq_headers,json=groq_data)
+    groq_headers = {
+            "Authorization": f"Bearer {groq_token}",
+            "Content-Type": "application/json"
+    }
 
-    if response.status_code == 200:
-        hasil =response.json()
-        jawaban_ai = hasil["choices"][0]["message"]["content"]
-        print ("\n===JAWABAN AI===")
-        print (jawaban_ai)
-    else:
-        print(f"Error ke Groq: {response.status_code} - {response.text}")
+    groq_data = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+            {"role":"system",
+            "content":"Kamu adalah asisten pribadi yang akan menjawab pertanyaan berdasarkan data yang saya berikan,jika yang aku tanyakan tidak ada dalam data yang saya berikan,jawab sesuai dengan pengetahuan umummu"},
+            {"role":"user",
+            "content":f"KONTEKS:\n{context_gabungan}\n\nPERTANYAAN: {user}"
+            }
+            ]
+    }
 
-except Exception as e:
-    print(f"Gagal menghubungi Groq: {e}")
+    try:
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions",
+        headers=groq_headers,json=groq_data)
+
+        if response.status_code == 200:
+            hasil =response.json()
+            jawaban_ai = hasil["choices"][0]["message"]["content"]
+            print ("\n===JAWABAN AI===")
+            print (jawaban_ai)
+        else:
+            print(f"Error ke Groq: {response.status_code} - {response.text}")
+
+    except Exception as e:
+        print(f"Gagal menghubungi Groq: {e}")
 
