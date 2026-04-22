@@ -38,7 +38,19 @@ def ambil(location):
     with open(location,"r") as f:
         file = json.load(f)
         return file
+def potong(teks,ukuran=3,overlap=2):
+    kata = teks.split()
+    hasil = []
 
+    langkah = ukuran-overlap #(ukuran dan overlap jngn sama)
+    for i in range(0,len(kata),langkah):
+        potongan = kata[i:i+ukuran]
+        hasil.append(" ".join(potongan))
+
+        if i+ukuran >= len(kata):
+            break
+
+    return hasil
 
 #Set-up API
 token = os.getenv("HUGGINGFACE_TOKEN")
@@ -115,14 +127,14 @@ if os.path.exists("Database_RAG.json"):
         database = []
 
         for text in data:
-            database.append({
-            "text":text,
-            "embeddings":get_embeddings([text])[0]
-            })
-
-            #Simpan dan akses data json
+            chunking = potong(text)
+            for chunk in chunking:
+                database.append({
+                "text":chunk,
+                "embeddings":get_embeddings([chunk])[0]
+                })
             simpan("Database_RAG.json",database)
-            data_awal = ambil("Database_RAG.json")
+
     else:
         data_awal = ambil("Database_RAG.json")
 
@@ -130,16 +142,16 @@ else:
     database = []
 
     for text in data:
-        database.append({
-        "text":text,
-        "embeddings":get_embeddings([text])[0]
-        })
+        chunking = potong(text)
+        for chunk in chunking:
+            database.append({
+            "text":chunk,
+            "embeddings":get_embeddings([chunk])[0]
+                })
 
-        #Simpan dan akses data json
-        simpan("Database_RAG.json",database)
-        data_awal = ambil("Database_RAG.json")
-
-
+#Simpan dan akses data json
+    simpan("Database_RAG.json",database)
+data_awal = ambil("Database_RAG.json")
 
 # --- LOOP PERTANYAAN BERULANG ---
 while True:
@@ -171,7 +183,8 @@ while True:
     hasil_pencarian.sort(key=lambda x: x["skor"], reverse=True)
 
     # Ambil 5 terbaik
-    top_search = hasil_pencarian[:5]
+    BATAS_AKURASI = 0.5
+    top_search = [h for h in hasil_pencarian if h["skor"] > BATAS_AKURASI][:5]
 
     # Gabungkan teksnya
     context_gabungan = "\n".join([item["text"] for item in top_search])
