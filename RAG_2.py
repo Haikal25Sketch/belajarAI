@@ -98,7 +98,7 @@ def banding(a, b):
 
 # --- EKSEKUSI ---
 # Ganti path sesuai file yang mau dibaca
-path_file = "pengetahuan.txt"
+path_file = "/storage/emulated/0/Download/Numpy_Python_Cheat_Sheet.pdf"
 # Ambil nama file buat jadi nama database biar gak ketuker sama file lain
 nama_file_asli = os.path.basename(path_file).split('.')[0]
 nama_db = f"Database_{nama_file_asli}.json"
@@ -135,7 +135,6 @@ else:
 
 # Ambil data yang sudah jadi
 data_awal = ambil(nama_db)
-
 # --- LOOP PERTANYAAN ---
 while True:
     user = input("\nMasukkan pertanyaan (ketik 'keluar' untuk berhenti): ")
@@ -160,8 +159,9 @@ while True:
     # Ambil 5 teratas yang masuk akal
     BATAS_AKURASI = 0.4
     top_search = [h for h in hasil_pencarian if h["skor"] > BATAS_AKURASI][:5]
-    context_gabungan = "\n".join([item["text"] for item in top_search])
 
+    context_gabungan = "\n".join([item["text"] for item in top_search])
+    print (context_gabungan)
     # Tanya ke Groq
     groq_token = os.getenv("GROQ_API_KEY")
     groq_headers = {"Authorization": f"Bearer {groq_token}", "Content-Type": "application/json"}
@@ -177,6 +177,7 @@ while True:
         response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=groq_headers, json=groq_data)
         if response.status_code == 200:
             jawaban_ai = response.json()["choices"][0]["message"]["content"]
+            print (response.json())
             print("\n=== JAWABAN AI ===")
             print(jawaban_ai)
         else:
