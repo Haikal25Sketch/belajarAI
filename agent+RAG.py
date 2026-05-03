@@ -156,6 +156,7 @@ def agent(pertanyaan):
 
 
         balasan = response.json()["choices"][0]["message"]["content"]
+        print (response.json())
         print(f"\nAI:\n{balasan}")
 
         if "TOOLS:" in balasan and "INPUT:" in balasan:
