@@ -3,6 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 import math
+import logging
 load_dotenv()
 
 # ===== 1. DEFINISI TOOLS =====
@@ -48,7 +49,7 @@ TOOLS_DEFINITION = [
         "type":"function",
         "function": {
             "name":"cari_database",
-            "descrption":"cari informasi tertentu di database",
+            "description":"cari informasi tertentu di database",
             "parameters": {
                 "type":"object",
                 "properties": {
@@ -106,8 +107,8 @@ def potong(teks, ukuran=100, overlap=20): # Ukuran default digedein biar AI lebi
 # Set-up API
 load_dotenv()
 token = os.getenv("HUGGINGFACE_TOKEN")
-url = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
-headers = {
+url ="https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
+hf_headers = {
     "Authorization":f"Bearer {token}",
     "Content-Type":"application/json"
 }
@@ -116,7 +117,7 @@ headers = {
 def get_embeddings(text):
     payload = {"inputs": text}
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=hf_headers, json=payload)
         if response.status_code == 200:
             return response.json()
         else:
