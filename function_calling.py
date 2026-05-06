@@ -4,11 +4,141 @@ import json
 from dotenv import load_dotenv
 import math
 import logging
+from PyPDF2 import PdfReader
 load_dotenv()
 
-# ===== 1. DEFINISI TOOLS =====
-# Bedanya sama sebelumnya — tools didefinisikan sebagai JSON
-# bukan cuma dict fungsi Python
+
+
+
+def setup_logging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    terminal_handler = logging.StreamHandler()
+    file_handler = logging.FileHandler("Agent_ai.log")
+    terminal_handler.setLevel(logging.ERROR)
+    file_handler.setLevel(logging.DEBUG)
+    
+    stream_fmt = logging.Formatter("%(levelname)s |  %(message)s")
+    file_fmt =logging.Formatter("%(asctime)s | %(levelname)s|%(name)s | %(message)s")
+    terminal_handler.setFormatter(stream_fmt)
+    file_handler.setFormatter(file_fmt)
+    logger.addHandler(terminal_handler)
+    logger.addHandler(file_handler)
+    return logger
+
+logger = setup_logging()
+
+def load_data(location):
+    if not os.path.exists(location):
+        logger.error(f"FILE {location} TIDAK ADA!!!.")
+        return []
+    try:
+        if location.endswith(".txt"):
+            with open(location,"r")as f:
+                lines =[line.strip() for line in f if line.strip()]
+                logger.info("DATA TXT BERHASIL DIMUAT...")
+                return lines
+
+        elif location.endswith(".pdf"):
+            try:
+                with open(location,"rb") as f:
+                    reader = PdfReader(f)
+                    file = []
+                    for halaman in reader.pages:
+                        teks_halaman = halaman.extract_text()
+                        if teks_halaman:
+                    # Simpan per halaman, jangan kumulatif biar RAM gak penuh
+                            file.append(teks_halaman)
+                        logger.info(f"DATA PDF BERHASIL DIMUAT ({len(file)} Halaman)...")
+                        return file
+
+            except (FileNotFoundError,PermissionError,UnicodeDecodeError) as e:
+                logger.error(f"ERROR PDF : {e}!!!")
+                return []
+    except (FileNotFoundError,PermissionError) as e:
+        logger.error(f"ERROR FILE : {e}!!!")
+        return []
+
+    logger.error("FORMAT FILE TIDAK DIKENALI!!!")
+    raise ValueError("FORMAT FILE TIDAK DIDUKUNG")
+
+
+def simpan(location,data):
+    with open(location,"w") as f:
+        json.dump(data,f,indent=4)
+        logger.info(f"DATA BERHASIL DISIMPAN DI {location}")
+
+def ambil(location):
+    with open(location,"r") as f:
+        file = json.load(f)
+        return file
+
+# Potong teks jadi kecil-kecil
+def potong(teks, ukuran=100, overlap=20): # Ukuran default digedein biar AI lebih pinter
+    kata = teks.split() # pecah string jadi list
+    hasil = []
+    langkah = ukuran - overlap
+    for i in range(0, len(kata), langkah):
+        potongan = kata[i:i+ukuran]
+        hasil.append(" ".join(potongan))
+        if i + ukuran >= len(kata):
+            break
+    return hasil
+
+# Fungsi dapetin embeddings (bisa terima satu teks atau list teks)
+token = os.getenv("HUGGINGFACE_TOKEN")
+url ="https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
+hf_headers = {
+    "Authorization":f"Bearer {token}",
+    "Content-Type":"application/json"
+}
+def get_embeddings(text):
+    payload = {"inputs": text}
+    try:
+        response = requests.post(url, headers=hf_headers, json=payload)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"EMBEDDINGS GAGAL | STATUS: {response.status_code}")
+            return None
+    except Exception as e:
+        logger.error(f"ERROR API: {e}")
+        return None
+
+
+
+PATH_FILE = "pengetahuan.txt"
+NAMA_DB = "Database_pengetahuan.json"
+
+if not os.path.exists(NAMA_DB):
+    logger.info("Membuat database baru...")
+    data_mentah = load_data(PATH_FILE)
+
+    # 1. Kumpulkan semua chunk dulu
+    semua_chunk = []
+    for teks in data_mentah:
+        chunks = potong(teks)
+        semua_chunk.extend(chunks)
+
+    # Proses Embeddings pake BATCH (Sekaligus banyak)
+    database = []
+    batch_size = 15 # Kirim 15 chunk sekali jalan
+    total = len(semua_chunk)
+
+    logger.info(f"Memproses {total} chunk dengan sistem batching...")
+    for i in range(0, total, batch_size):
+        batch = semua_chunk[i : i + batch_size]
+        res_embeddings = get_embeddings(batch)
+
+        if res_embeddings:
+            for t, e in zip(batch, res_embeddings):
+                database.append({"text": t, "embeddings": e})
+            logger.info(f"Progress: {min(i + batch_size, total)}/{total} selesai...")
+
+    simpan(NAMA_DB, database)
+else:
+    logger.info("Database ditemukan, langsung memuat...")
 
 TOOLS_DEFINITION = [
     {
@@ -65,68 +195,6 @@ TOOLS_DEFINITION = [
 ]
 
 
-def load_data(location):
-    if location.endswith(".txt"):
-        with open(location,"r")as f:
-            lines =[line.strip() for line in f if line.strip()]
-            logger.info("DATA TXT BERHASIL DIMUAT...")
-            return lines
-    elif location.endswith(".pdf"):
-        with open(location,"rb") as f:
-            reader = PdfReader(f)
-            file = []
-            for halaman in reader.pages:
-                teks_halaman = halaman.extract_text()
-                if teks_halaman:
-                    # Simpan per halaman, jangan kumulatif biar RAM gak penuh
-                    file.append(teks_halaman)
-            logger.info(f"DATA PDF BERHASIL DIMUAT ({len(file)} Halaman)...")
-            return file
-def simpan(location,data):
-    with open(location,"w") as f:
-        json.dump(data,f,indent=4)
-        logger.info(f"DATA BERHASIL DISIMPAN DI {location}")
-
-def ambil(location):
-    with open(location,"r") as f:
-        file = json.load(f)
-        return file
-
-# Potong teks jadi kecil-kecil
-def potong(teks, ukuran=100, overlap=20): # Ukuran default digedein biar AI lebih pinter
-    kata = teks.split()
-    hasil = []
-    langkah = ukuran - overlap
-    for i in range(0, len(kata), langkah):
-        potongan = kata[i:i+ukuran]
-        hasil.append(" ".join(potongan))
-        if i + ukuran >= len(kata):
-            break
-    return hasil
-
-# Set-up API
-load_dotenv()
-token = os.getenv("HUGGINGFACE_TOKEN")
-url ="https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
-hf_headers = {
-    "Authorization":f"Bearer {token}",
-    "Content-Type":"application/json"
-}
-
-# Fungsi dapetin embeddings (bisa terima satu teks atau list teks)
-def get_embeddings(text):
-    payload = {"inputs": text}
-    try:
-        response = requests.post(url, headers=hf_headers, json=payload)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            logger.error(f"EMBEDDINGS GAGAL | STATUS: {response.status_code}")
-            return None
-    except Exception as e:
-        logger.error(f"ERROR API: {e}")
-        return None
-
 # Bandingkan kemiripan (Cosine Similarity)
 def banding(a, b):
     dot = sum(x*y for x,y in zip(a,b))
@@ -153,7 +221,36 @@ def kalkulator(ekspresi):
         return "Ekspresi tidak valid"
 
 def cari_database(query):
-    data_awal = ambil("Database_pengetahuan.json")
+    data_awal = ambil(NAMA_DB)
+    data = load_data(PATH_FILE)
+
+    semua_chunk = []
+    for teks in data:
+        chunks = potong(teks)
+        semua_chunk.extend(chunks)
+    if len(data_awal) != len(semua_chunk):
+        logger.info("DATA BERUBAH!!! RE-EMBED...")
+        database = []
+        batch_size = 15
+        total = len(semua_chunk)
+
+        logger.info(f"Memproses {total} chunk dengan sistem batching...")
+        
+        for i in range(0, total, batch_size):
+            batch = semua_chunk[i : i + batch_size]
+            res_embeddings = get_embeddings(batch)
+
+            if res_embeddings:
+                for t, e in zip(batch, res_embeddings):
+                    database.append({"text": t, "embeddings": e})
+            logger.info(f"Progress: {min(i + batch_size, total)}/{total} selesai...")
+        nama_file_asli = os.path.basename(PATH_FILE).split('.')[0]
+        simpan(NAMA_DB,database)
+        data_awal = database
+
+    else:
+        logger.info("DATABASE SESUAI. LANGSUNG PAKAI...")
+
     embs = get_embeddings([query])
     user_emb= embs[0]
 
@@ -175,17 +272,20 @@ TOOLS = {
     "cari_database":cari_database
 }
 
+SYSTEM_PROMPT = """Kamu adalah AI Agent yang helpful. 
+Gunakan tools yang tersedia jika diperlukan.
+Jawab dalam Bahasa Indonesia."""
+
 # ===== 3. AGENT =====
+messages = [{"role":"system","content":SYSTEM_PROMPT}]
+
 def agent(pertanyaan):
     groq_token = os.getenv("GROQ_API_KEY")
     headers = {
         "Authorization": f"Bearer {groq_token}",
         "Content-Type": "application/json"
     }
-
-    messages = [
-        {"role": "user", "content": pertanyaan}
-    ]
+    messages.append({"role":"user","content":pertanyaan})
 
     while True:
         response = requests.post(
@@ -199,7 +299,11 @@ def agent(pertanyaan):
         )
 
         data = response.json()
-        print (data)
+
+        if "choices" not in data:
+            logger.error(f"\n[ERROR API]: {data.get('error', {}).get('message', 'Terjadi kesalahan tidak dikenal')}")
+            break # Keluar dari loop jika API error
+
         pesan = data["choices"][0]["message"]
         # Cek apakah AI minta jalankan tool
         if pesan.get("tool_calls"):
@@ -224,7 +328,9 @@ def agent(pertanyaan):
 
         else:
             # AI jawab langsung
-            print(f"\nAI: {pesan['content']}")
+            if pesan.get('content'):
+                print(f"\nAI: {pesan['content']}")
+            messages.append(pesan)
             break
 
 # ===== MAIN =====
