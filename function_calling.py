@@ -50,8 +50,8 @@ def load_data(location):
                         if teks_halaman:
                     # Simpan per halaman, jangan kumulatif biar RAM gak penuh
                             file.append(teks_halaman)
-                        logger.info(f"DATA PDF BERHASIL DIMUAT ({len(file)} Halaman)...")
-                        return file
+                    logger.info(f"DATA PDF BERHASIL DIMUAT ({len(file)} Halaman)...")
+                    return file
 
             except (FileNotFoundError,PermissionError,UnicodeDecodeError) as e:
                 logger.error(f"ERROR PDF : {e}!!!")
