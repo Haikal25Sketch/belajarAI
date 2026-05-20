@@ -108,8 +108,8 @@ def get_embeddings(text):
 
 
 
-PATH_FILE = "pengetahuan.txt"
-NAMA_DB = "Database_pengetahuan.json"
+PATH_FILE = "/storage/emulated/0/Download/IDN BROKEN STRINGS.pdf"
+NAMA_DB = "Database_IDN BROKEN STRINGS.json"
 
 if not os.path.exists(NAMA_DB):
     logger.info("Membuat database baru...")
@@ -151,7 +151,7 @@ TOOLS_DEFINITION = [
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Gunakan jika user bertanya tentang kota atau suhu kota"
+                        "description": "Nama kota yang ingin dicek cuacanya"
                     }
                 },
                 "required": ["query"]
@@ -271,11 +271,35 @@ TOOLS = {
     "kalkulator": kalkulator,
     "cari_database":cari_database
 }
+#MEMPERBARUI PROMPT
+SYSTEM_PROMPT = """Kamu adalah AI Agent yang memiliki nama Lilim.Tugasmu adalah membantu hal yang diminta user tapi dengan methode step by step untuk melatih pemikiran.
 
-SYSTEM_PROMPT = """Kamu adalah AI Agent yang helpful. 
-Gunakan tools yang tersedia jika diperlukan.
-Jawab dalam Bahasa Indonesia."""
+Kamu juga memiliki beberapa tool:
+1.cuaca
+2.kalkulator
+3.cari_database
 
+Ini adalah contoh perilaku user agar kamu memahami polanya:
+
+1.user:"Bagaimana cuaca...."
+maka kamu bisa menggunakan tool cuaca
+
+2.user:"Berapa hasil dari 2 * 4"
+maka kamu bisa menggunakan tool kalkulator
+
+3.user:"siapa nama orang dalam database yang aku kirim"
+maka kamu bisa menggunakan tool cari_database
+
+Jika jawaban dari pertanyaan user tidak ada dalam tool,maka kamubisa menggunakan pengetahuan umum kamu untuk memberikan jawabannya
+contoh :
+user: "Siapa orang yang melakukan manipulasi di database?"
+Ai:
+1.User meminta jawaban dari database
+2.Tool cari_database diperlukan
+3.Gunalan tool cari_database
+4.hasil = bobby
+5.berikan jawaban ke user
+"""
 # ===== 3. AGENT =====
 messages = [{"role":"system","content":SYSTEM_PROMPT}]
 
@@ -308,15 +332,13 @@ def agent(pertanyaan):
         # Cek apakah AI minta jalankan tool
         if pesan.get("tool_calls"):
             tool_call = pesan["tool_calls"][0]
-            
             nama_tool = tool_call["function"]["name"]
-            argumen = json.loads(tool_call["function"]["arguments"])
-            
-            print(f"[Tool dipanggil: {nama_tool} | Input: {argumen}]")
-            
+            argumen = json.loads(tool_call["function"]["arguments"]) # Ubah teks json menjadi string python
+
+            #print(f"[Tool dipanggil: {nama_tool} | Input: {argumen}]")
             # Jalankan fungsi Python
             hasil = TOOLS[nama_tool](**argumen)
-            print(f"[Hasil: {hasil}]")
+            #print(f"[Hasil: {hasil}]")
             
             # Update memori
             messages.append(pesan)
