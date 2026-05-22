@@ -3,8 +3,26 @@ import os
 from dotenv import load_dotenv
 import json
 import math
+import logging
+from PyPDF2 import PdfReader
+
 load_dotenv()
- #Menambahkan RAG ke Agent Ai,dahal anjaay dahal dibantu ai
+ #Menambahkan RAG ke Agent Ai, anjaay dahal dibantu ai
+def setup_logging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    terminal_handler = logging.StreamHandler()
+    terminal_handler.setLevel(logging.DEBUG)
+
+    stream_fmt = logging.Formatter("%(levelname)s |  %(message)s")
+    terminal_handler.setFormatter(stream_fmt)
+
+    logger.addHandler(terminal_handler)
+    return logger
+
+logger = setup_logging()
+
 def load_data(location):
     if location.endswith(".txt"):
         with open(location,"r")as f:
@@ -76,6 +94,42 @@ def banding(a, b):
     if mag_a == 0 or mag_b == 0: return 0
     return dot / (mag_a * mag_b)
 
+path_file = "pengetahuan.txt" # -> bisa diganti
+nama_file_asli = os.path.basename(path_file).split('.')[0]
+nama_db = f"Database_{nama_file_asli}.json"
+
+
+if not os.path.exists(nama_db):
+    logger.info("Membuat database baru...")
+    data_mentah = load_data(path_file)
+
+    semua_chunk = []
+    for teks in data_mentah:
+        chunks = potong(teks)
+        semua_chunk.extend(chunks)
+
+    # 2. FIX POIN 2: Proses Embeddings pake BATCH (Sekaligus banyak)
+    database = []
+    batch_size = 15 # Kirim 15 chunk sekali jalan
+    total = len(semua_chunk)
+
+    logger.info(f"Memproses {total} chunk dengan sistem batching...")
+    for i in range(0, total, batch_size):
+        batch = semua_chunk[i : i + batch_size]
+        res_embeddings = get_embeddings(batch)
+
+        if res_embeddings:
+            for t, e in zip(batch, res_embeddings):
+                database.append({"text": t, "embeddings": e})
+            logger.info(f"Progress: {min(i + batch_size, total)}/{total
+} selesai...")
+
+    simpan(nama_db, database)
+else:
+    logger.info("Database ditemukan, langsung memuat...")
+
+# Ambil data yang sudah jadi
+data_awal = ambil(nama_db)
 
 
 

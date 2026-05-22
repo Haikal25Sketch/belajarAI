@@ -29,6 +29,7 @@ TOOLS = {
     "kalkulator": kalkulator
 }
 
+print (TOOLS)
 # ===== 2. PROMPT =====
 SYSTEM_PROMPT = """Kamu adalah AI Agent.
 Kamu punya tools:
@@ -39,7 +40,7 @@ Kalau butuh tool, balas HANYA dengan format:
 TOOLS: nama_tool
 INPUT: inputnya
 
-Kalau sudah bisa jawab tanpa tool, langsung jawab saja."""
+Kalau sudah bisa jawab tanpa tool, langsung jawab saja dengan pwngetahua umum kamu."""
 
 # ===== 3. AGENT LOOP =====
 def agent(pertanyaan):
@@ -64,7 +65,8 @@ def agent(pertanyaan):
 
         balasan = response.json()["choices"][0]["message"]["content"]
         print (response.json())
-        print(f"\nAI:\n {balasan}")
+        
+        print(f"\nAI:\n{balasan}")
 
         if "TOOLS:" in balasan and "INPUT:" in balasan:
             baris = balasan.strip().split("\n")

@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import math
 import logging
 from PyPDF2 import PdfReader
-import sqlite3
 load_dotenv()
 
 
@@ -109,34 +108,10 @@ def get_embeddings(text):
 
 
 
-PATH_FILE = "/storage/emulated/0/Download/IDN BROKEN STRINGS.pdf"
-#Mengganti tempat menampung database dari json menjadi sqlite
-NAMA_DB_SQLITE = "Database_IDN BROKEN STRINGS.db"
+PATH_FILE = "pengetahuan.txt"
+NAMA_DB = "Database_pengetahuan.json"
 
-#Inisialisasi Database Sqlite
-koneksi = sqlite3.connect(NAMA_DB_SQLITE) # Membuka koneksi ke file database SQLite. Jika file database dengan nama tersebut belum ada, SQLite akan otomatis membuat file baru di direktori tersebut. Dibuat di awal script
-cursor = koneksi.cursor() # Membuat objek Cursor. Analoginya, jika connect adalah membuka gerbang bank data, maka cursor adalah teller/petugas yang bertugas mondar-mandir mengeksekusi perintahkamu ke dalam ruangan brankas.Dibuat setelah koneksi berhasil
-
-#MEMBUAT TABEL (Teks dan embeddings disimpan dalam TEKT/BLOB)
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS dokumen (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    text TEXT,
-    embeddings TEXT
-)
-""")
-koneksi.commit()
-
-koneksi.commit() # MENYIMPAN SEMUA PERUBAHAN KE DATABASE
-
-#INTEGER : TIPE DATANYA ANGKA BULAT
-#PRIMARY KEY : PENANDA BAHWA KOLOM INI ADALAH IDENTITAS TIAP BARIS
-#AUTOINCREMENT : MEMKASA SQLITE AGAR TIDAK MEMAKAI ID LAMA / NILAI id OTOMATIS BERTAMBAH SENDIRI
-
-#CEK APAKAH DATABASE KOSONG
-
-cursor.execute("SELECT COUNT(*) FROM dokumen") # Menghitung jumlah baris di tabel dokumen
-if cursor.fetchone()[0] == 0:
+if not os.path.exists(NAMA_DB):
     logger.info("Membuat database baru...")
     data_mentah = load_data(PATH_FILE)
 
@@ -147,38 +122,37 @@ if cursor.fetchone()[0] == 0:
         semua_chunk.extend(chunks)
 
     # Proses Embeddings pake BATCH (Sekaligus banyak)
+    database = []
     batch_size = 15 # Kirim 15 chunk sekali jalan
     total = len(semua_chunk)
 
-    logger.info(f"Memproses {total} chunk dengan sistem batchingke SQlite...")
+    logger.info(f"Memproses {total} chunk dengan sistem batching...")
     for i in range(0, total, batch_size):
         batch = semua_chunk[i : i + batch_size]
         res_embeddings = get_embeddings(batch)
 
         if res_embeddings:
             for t, e in zip(batch, res_embeddings):
-            #Ubah list embeddings jadi string json agar bisa disimpan di teks SQlite
-                embedding_str = json.dumps(e)
-                cursor.execute(
-                    "INSERT INTO dokumen(text,embeddings) VALUES(?,?)",(t,embedding_str)
-                )
-                
-            logger.info(f"Progress SQlite: {min(i + batch_size, total)}/{total} selesai...")
+                database.append({"text": t, "embeddings": e})
+            logger.info(f"Progress: {min(i + batch_size, total)}/{total} selesai...")
 
-
+    simpan(NAMA_DB, database)
 else:
-    logger.info("Database SQlite ditemukan, langsung memuat...")
+    logger.info("Database ditemukan, langsung memuat...")
 
 TOOLS_DEFINITION = [
     {
         "type": "function",
         "function": {
             "name": "cuaca",
-            "description": "Cek cuaca kota",
+            "description": "Cek cuaca di kota tertentu",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Nama kota"}
+                    "query": {
+                        "type": "string",
+                        "description": "Nama kota yang ingin dicek cuacanya"
+                    }
                 },
                 "required": ["query"]
             }
@@ -188,11 +162,14 @@ TOOLS_DEFINITION = [
         "type": "function", 
         "function": {
             "name": "kalkulator",
-            "description": "Hitung matematika",
+            "description": "Menghitung matematika",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "ekspresi": {"type": "string", "description": "Ekspresi matematika"}
+                    "ekspresi": {
+                        "type": "string",
+                        "description": "pertanyaan matematika yang harus dijawab"
+                    }
                 },
                 "required": ["ekspresi"]
             }
@@ -202,11 +179,14 @@ TOOLS_DEFINITION = [
         "type":"function",
         "function": {
             "name":"cari_database",
-            "description":"Cari info di database/PDF",
+            "description":"cari informasi tertentu di database",
             "parameters": {
                 "type":"object",
                 "properties": {
-                    "query": {"type":"string", "description":"Kata kunci"}
+                    "query": {
+                        "type":"string",
+                        "description":"informasi yang harus dibandingkan di database"
+                    }
                 },
                 "required":["query"]
              }
@@ -241,21 +221,43 @@ def kalkulator(ekspresi):
         return "Ekspresi tidak valid"
 
 def cari_database(query):
-    logger.info(f"Mencari info di Database untuk query {query}")
+    data_awal = ambil(NAMA_DB)
+    data = load_data(PATH_FILE)
+
+    semua_chunk = []
+    for teks in data:
+        chunks = potong(teks)
+        semua_chunk.extend(chunks)
+    if len(data_awal) != len(semua_chunk):
+        logger.info("DATA BERUBAH!!! RE-EMBED...")
+        database = []
+        batch_size = 15
+        total = len(semua_chunk)
+
+        logger.info(f"Memproses {total} chunk dengan sistem batching...")
+        
+        for i in range(0, total, batch_size):
+            batch = semua_chunk[i : i + batch_size]
+            res_embeddings = get_embeddings(batch)
+
+            if res_embeddings:
+                for t, e in zip(batch, res_embeddings):
+                    database.append({"text": t, "embeddings": e})
+            logger.info(f"Progress: {min(i + batch_size, total)}/{total} selesai...")
+        nama_file_asli = os.path.basename(PATH_FILE).split('.')[0]
+        simpan(NAMA_DB,database)
+        data_awal = database
+
+    else:
+        logger.info("DATABASE SESUAI. LANGSUNG PAKAI...")
+
     embs = get_embeddings([query])
-    if not embs :
-        return logger.info("Gagal memproses query ke Embedding")
     user_emb= embs[0]
-    # Ambil semua data dari SQlite ke memori secara sekaligus
-    cursor.execute("SELECT text,embeddings FROM dokumen")
-    baris_data = cursor.fetchall() # Mengambil semua baris
+
     hasil = []
-    for teks,emb_str in baris_data:
-        #kembalikan string json jadi list float python
-        emb_list = json.loads(emb_str)
-        #bandinglan
-        skor = banding(emb_list,user_emb)
-        hasil.append({"skor":skor,"text":teks})
+    for emb in data_awal:
+        skor = banding(emb["embeddings"],user_emb)
+        hasil.append({"skor":skor,"text":emb["text"]})
 
     BATAS_AKURASI = 0.4
     hasil.sort(key=lambda x:x["skor"],reverse = True)
@@ -269,11 +271,11 @@ TOOLS = {
     "kalkulator": kalkulator,
     "cari_database":cari_database
 }
-#MEMPERBARUI PROMPT
-SYSTEM_PROMPT = """Kamu Lilim, AI Agent yang berpikir step-by-step.
-Tersedia tools: cuaca, kalkulator, cari_database.
-Gunakan cari_database jika butuh data dari PDF/DB.
-Gunakan pengetahuan umum jika tidak ada di tools."""
+
+SYSTEM_PROMPT = """Kamu adalah AI Agent yang helpful. 
+Gunakan tools yang tersedia jika diperlukan.
+Jawab dalam Bahasa Indonesia."""
+
 # ===== 3. AGENT =====
 messages = [{"role":"system","content":SYSTEM_PROMPT}]
 
@@ -283,11 +285,6 @@ def agent(pertanyaan):
         "Authorization": f"Bearer {groq_token}",
         "Content-Type": "application/json"
     }
-    
-    # Batasi history agar tidak meledak (Simpan system prompt + 9 pesan terakhir)
-    if len(messages) > 10:
-        messages[:] = [messages[0]] + messages[-9:]
-        
     messages.append({"role":"user","content":pertanyaan})
 
     while True:
@@ -295,29 +292,36 @@ def agent(pertanyaan):
             "https://api.groq.com/openai/v1/chat/completions",
             headers=headers,
             json={
-                "model": "llama-3.1-8b-instant",
+                "model": "llama-3.3-70b-versatile",
                 "messages": messages,
-                "tools": TOOLS_DEFINITION
+                "tools": TOOLS_DEFINITION  # ← INI BEDANYA
             }
         )
 
         data = response.json()
+        print (data)
+        print()
 
         if "choices" not in data:
             logger.error(f"\n[ERROR API]: {data.get('error', {}).get('message', 'Terjadi kesalahan tidak dikenal')}")
             break # Keluar dari loop jika API error
 
         pesan = data["choices"][0]["message"]
+        print (pesan)
+        print()
+        print()
         # Cek apakah AI minta jalankan tool
         if pesan.get("tool_calls"):
             tool_call = pesan["tool_calls"][0]
+            print()
             nama_tool = tool_call["function"]["name"]
-            argumen = json.loads(tool_call["function"]["arguments"]) # Ubah teks json menjadi string python
-
-            #print(f"[Tool dipanggil: {nama_tool} | Input: {argumen}]")
+            argumen = json.loads(tool_call["function"]["arguments"]) # ubah teks json AI jadi dict pytho 
+            
+            print(f"[Tool dipanggil: {nama_tool} | Input: {argumen}]")
+            
             # Jalankan fungsi Python
             hasil = TOOLS[nama_tool](**argumen)
-            #print(f"[Hasil: {hasil}]")
+            print(f"[Hasil: {hasil}]")
             
             # Update memori
             messages.append(pesan)

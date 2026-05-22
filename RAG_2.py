@@ -78,14 +78,25 @@ headers = {
 def get_embeddings(text):
     payload = {"inputs": text}
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        # Menambahkan timeout agar tidak gantung
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
         if response.status_code == 200:
             return response.json()
-        else:
-            logger.error(f"EMBEDDINGS GAGAL | STATUS: {response.status_code}")
+        elif response.status_code == 429:
+            logger.error("EMBEDDINGS GAGAL | Status: 429 - Rate limit tercapai. Silakan tunggu.")
             return None
+        else:
+            logger.error(f"EMBEDDINGS GAGAL | STATUS: {response.status_code} - {response.text}")
+            return None
+            
+    except requests.exceptions.Timeout:
+        logger.error("ERROR API: Waktu permintaan habis (Timeout).")
+        return None
+    except requests.exceptions.ConnectionError:
+        logger.error("ERROR API: Gagal terhubung ke server. Periksa internet.")
+        return None
     except Exception as e:
-        logger.error(f"ERROR API: {e}")
+        logger.error(f"ERROR API TIDAK TERDUGA: {e}")
         return None
 
 # Bandingkan kemiripan (Cosine Similarity)
@@ -98,7 +109,7 @@ def banding(a, b):
 
 # --- EKSEKUSI ---
 # Ganti path sesuai file yang mau dibaca
-path_file = "/storage/emulated/0/Download/Numpy_Python_Cheat_Sheet.pdf"
+path_file = "pengetahuan.txt"
 # Ambil nama file buat jadi nama database biar gak ketuker sama file lain
 nama_file_asli = os.path.basename(path_file).split('.')[0]
 nama_db = f"Database_{nama_file_asli}.json"
@@ -174,13 +185,22 @@ while True:
     }
 
     try:
-        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=groq_headers, json=groq_data)
+        # Menambahkan timeout 20 detik untuk Groq
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=groq_headers, json=groq_data, timeout=20)
+        
         if response.status_code == 200:
             jawaban_ai = response.json()["choices"][0]["message"]["content"]
-            print (response.json())
+            # print (response.json()) # Opsional: dimatikan agar output bersih
             print("\n=== JAWABAN AI ===")
             print(jawaban_ai)
+        elif response.status_code == 429:
+            print("Error ke Groq: Terlalu banyak permintaan (Rate Limit).")
         else:
             print(f"Error ke Groq: {response.status_code} - {response.text}")
+            
+    except requests.exceptions.Timeout:
+        print("Gagal menghubungi Groq: Waktu permintaan habis (Timeout).")
+    except requests.exceptions.ConnectionError:
+        print("Gagal menghubungi Groq: Masalah koneksi jaringan.")
     except Exception as e:
         print(f"Gagal menghubungi Groq: {e}")
