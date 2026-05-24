@@ -125,7 +125,6 @@ CREATE TABLE IF NOT EXISTS dokumen (
     embeddings TEXT
 )
 """)
-koneksi.commit()
 
 koneksi.commit() # MENYIMPAN SEMUA PERUBAHAN KE DATABASE
 
@@ -147,10 +146,11 @@ if cursor.fetchone()[0] == 0:
         semua_chunk.extend(chunks)
 
     # Proses Embeddings pake BATCH (Sekaligus banyak)
-    batch_size = 15 # Kirim 15 chunk sekali jalan
+    BATCH_SIZE = 15
+    batch_size = BATCH_SIZE # Kirim 15 chunk sekali jalan
     total = len(semua_chunk)
 
-    logger.info(f"Memproses {total} chunk dengan sistem batchingke SQlite...")
+    logger.info(f"Memproses {total} chunk dengan sistem batching ke SQlite...")
     for i in range(0, total, batch_size):
         batch = semua_chunk[i : i + batch_size]
         res_embeddings = get_embeddings(batch)
@@ -244,7 +244,7 @@ def cari_database(query):
     logger.info(f"Mencari info di Database untuk query {query}")
     embs = get_embeddings([query])
     if not embs :
-        return logger.info("Gagal memproses query ke Embedding")
+        logger.info("Gagal memproses query ke Embedding")
     user_emb= embs[0]
     # Ambil semua data dari SQlite ke memori secara sekaligus
     cursor.execute("SELECT text,embeddings FROM dokumen")
@@ -270,10 +270,25 @@ TOOLS = {
     "cari_database":cari_database
 }
 #MEMPERBARUI PROMPT
-SYSTEM_PROMPT = """Kamu Lilim, AI Agent yang berpikir step-by-step.
-Tersedia tools: cuaca, kalkulator, cari_database.
-Gunakan cari_database jika butuh data dari PDF/DB.
-Gunakan pengetahuan umum jika tidak ada di tools."""
+SYSTEM_PROMPT = """Kamu adalah AI Agent yang memiliki nama Lilim. Tugasmu adalah membantu hal yang diminta user tapi dengan metode step by step untuk melatih pemikiran.
+
+Kamu juga memiliki beberapa tool:
+1.cuaca
+2.kalkulator
+3.cari_database
+
+Ini adalah contoh perilaku user agar kamu memahami polanya:
+
+1.user:"Bagaimana cuaca...."
+maka kamu bisa menggunakan tool cuaca
+
+2.user:"Berapa hasil dari 2 * 4"
+maka kamu bisa menggunakan tool kalkulator
+
+3.user:"siapa nama orang dalam database yang aku kirim"
+maka kamu bisa menggunakan tool cari_database
+
+Jika jawaban dari pertanyaan user tidak ada dalam tool, maka kamu bisa menggunakan pengetahuan umum kamu untuk memberikan jawabannya."""
 # ===== 3. AGENT =====
 messages = [{"role":"system","content":SYSTEM_PROMPT}]
 
@@ -295,7 +310,7 @@ def agent(pertanyaan):
             "https://api.groq.com/openai/v1/chat/completions",
             headers=headers,
             json={
-                "model": "llama-3.1-8b-instant",
+                "model": "llama-3.3-70b-versatile",
                 "messages": messages,
                 "tools": TOOLS_DEFINITION
             }
@@ -335,8 +350,13 @@ def agent(pertanyaan):
             break
 
 # ===== MAIN =====
-while True:
-    user = input("\nKamu: ")
-    if user.lower() == "keluar":
-        break
-    agent(user)
+try:
+    while True:
+        user = input("\nKamu: ")
+        if user.lower() == "keluar":
+            break
+        agent(user)
+finally:
+    logger.info("Menutup database SQLite...")
+    cursor.close()
+    koneksi.close()
