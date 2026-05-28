@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceHolder
+from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 
@@ -26,7 +26,7 @@ KOMPONEN UTAMA LANGCHAIN YANG DIGUNAKAN:
 # Memungkinkan pembuatan prompt yang dinamis menggunakan placeholder {variable}.
 # Keuntungan: Memisahkan logika instruksi dari data input.
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "Kamu adalah {asisten} yang ahli dan selalu menjawab dengan metode bertanya untuk memastikan pemahaman user."),
+    ("system", "Kamu adalah {asisten} yang ahli dan selalu menjawab dengan sedikit cara dan langsung ke intinya."),
     ("human", "Jelaskan konsep {topik} dengan bahasa yang mudah dimengerti.")
 ])
 
@@ -58,8 +58,8 @@ def jalankan_tutorial():
     # Invoke: Menjalankan chain dengan input berupa dictionary
     try:
         hasil = chain.invoke({
-            "asisten": "Guru codinh yang sabar",
-            "topik": "Descriptor python"
+            "asisten": "Guru matematika",
+            "topik": "rumus kuantum"
         })
         # invoke : cara standar memasukkan input ke chain
         print("\n=== JAWABAN DARI AI ===")

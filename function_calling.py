@@ -76,7 +76,7 @@ def ambil(location):
         return file
 
 # Potong teks jadi kecil-kecil
-def potong(teks, ukuran=100, overlap=20): # Ukuran default digedein biar AI lebih pinter
+def potong(teks, ukuran=500, overlap=100): # Ukuran default digedein biar AI lebih pinter
     kata = teks.split() # pecah string jadi list
     hasil = []
     langkah = ukuran - overlap
@@ -165,6 +165,9 @@ if cursor.fetchone()[0] == 0:
                 
             logger.info(f"Progress SQlite: {min(i + batch_size, total)}/{total} selesai...")
 
+    koneksi.commit() # Simpan perubahan ke database
+    logger.info("Semua data berhasil disimpan ke SQLite.")
+
 
 else:
     logger.info("Database SQlite ditemukan, langsung memuat...")
@@ -241,25 +244,41 @@ def kalkulator(ekspresi):
         return "Ekspresi tidak valid"
 
 def cari_database(query):
-    logger.info(f"Mencari info di Database untuk query {query}")
+    logger.info(f"Mencari info di Database untuk query: {query}")
     embs = get_embeddings([query])
     if not embs :
-        logger.info("Gagal memproses query ke Embedding")
-    user_emb= embs[0]
+        logger.error("Gagal memproses query ke Embedding")
+        return "Gagal memproses query ke database."
+        
+    user_emb = embs[0]
     # Ambil semua data dari SQlite ke memori secara sekaligus
-    cursor.execute("SELECT text,embeddings FROM dokumen")
-    baris_data = cursor.fetchall() # Mengambil semua baris
-    hasil = []
-    for teks,emb_str in baris_data:
-        #kembalikan string json jadi list float python
-        emb_list = json.loads(emb_str)
-        #bandinglan
-        skor = banding(emb_list,user_emb)
-        hasil.append({"skor":skor,"text":teks})
+    cursor.execute("SELECT text,embeddings FROM dokumen LIMIT 1000")
+    baris_data = cursor.fetchall()
+    
+    if not baris_data:
+        logger.warning("Database kosong! Tidak ada data untuk dicari.")
+        return "Database kosong, harap tunggu proses indexing selesai."
 
-    BATAS_AKURASI = 0.4
-    hasil.sort(key=lambda x:x["skor"],reverse = True)
-    top_search =[h for h in hasil if h["skor"] > BATAS_AKURASI] [:5]
+    hasil = []
+    for teks, emb_str in baris_data:
+        emb_list = json.loads(emb_str)
+        skor = banding(emb_list, user_emb)
+        hasil.append({"skor": skor, "text": teks})
+
+    BATAS_AKURASI = 0.3 
+    hasil.sort(key=lambda x: x["skor"], reverse=True)
+    
+    # Log top score untuk debugging
+    if hasil:
+        logger.info(f"Skor tertinggi: {hasil[0]['skor']:.4f}")
+
+    top_search = [h for h in hasil if h["skor"] > BATAS_AKURASI][:5]
+    
+    if not top_search:
+        logger.info("Tidak ada hasil yang relevan di atas ambang batas.")
+        return "Maaf, saya tidak menemukan informasi yang relevan di database."
+
+    logger.info(f"Menemukan {len(top_search)} hasil relevan.")
     return "\n".join([h["text"] for h in top_search])
 
 
@@ -325,22 +344,29 @@ def agent(pertanyaan):
         pesan = data["choices"][0]["message"]
         # Cek apakah AI minta jalankan tool
         if pesan.get("tool_calls"):
-            tool_call = pesan["tool_calls"][0]
-            nama_tool = tool_call["function"]["name"]
-            argumen = json.loads(tool_call["function"]["arguments"]) # Ubah teks json menjadi string python
-
-            #print(f"[Tool dipanggil: {nama_tool} | Input: {argumen}]")
-            # Jalankan fungsi Python
-            hasil = TOOLS[nama_tool](**argumen)
-            #print(f"[Hasil: {hasil}]")
+            messages.append(pesan) # Tambahkan pesan AI yang berisi tool_calls ke history
             
-            # Update memori
-            messages.append(pesan)
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call["id"],
-                "content": str(hasil)
-            })
+            for tool_call in pesan["tool_calls"]:
+                nama_tool = tool_call["function"]["name"]
+                argumen = json.loads(tool_call["function"]["arguments"])
+
+                logger.info(f"Memanggil tool: {nama_tool} dengan argumen: {argumen}")
+                
+                # Jalankan fungsi Python
+                if nama_tool in TOOLS:
+                    hasil = TOOLS[nama_tool](**argumen)
+                else:
+                    hasil = f"Error: Tool {nama_tool} tidak ditemukan."
+                
+                # Tambahkan hasil tool ke history
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "content": str(hasil)
+                })
+            
+            # Setelah semua tool dijalankan, lanjut ke iterasi berikutnya untuk mendapatkan respon final dari AI
+            continue
 
         else:
             # AI jawab langsung
