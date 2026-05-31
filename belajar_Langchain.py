@@ -1,5 +1,15 @@
 import os
+import warnings
 from dotenv import load_dotenv
+
+# Membungkam peringatan Deprecation agar tidak mengganggu di terminal
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+try:
+    from langchain_core._api import LangChainDeprecationWarning
+    warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
+except ImportError:
+    pass
+
 from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
@@ -15,6 +25,13 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 
 """
+LangChain:
+adalah sebuah pustaka (framework) yang menyatukan semua proses ribet
+
+(memotong teks,memanggil API dengan requests.post,mengelola riwayat pesan,mengatur looping untuk mendeteksi tool_calls dll...)
+
+menjadi komponen-komponen siap pakai seperti lego.
+
 KOMPONEN UTAMA LANGCHAIN YANG DIGUNAKAN:
 1. ChatPromptTemplate: Mengatur struktur pesan (System, Human, AI).
 2. ChatGroq: Interface untuk berinteraksi dengan model LLM dari Groq.
@@ -58,8 +75,8 @@ def jalankan_tutorial():
     # Invoke: Menjalankan chain dengan input berupa dictionary
     try:
         hasil = chain.invoke({
-            "asisten": "Guru matematika",
-            "topik": "rumus kuantum"
+            "asisten": "Wibu Genshin Impact",
+            "topik": "Jika dilihat dari lekuk tubuhnya,lebih cantikkan HuTao atau Yaemiko"
         })
         # invoke : cara standar memasukkan input ke chain
         print("\n=== JAWABAN DARI AI ===")
@@ -85,6 +102,19 @@ load_dotenv()
 # ==========================================
 # 1. PROMPT TEMPLATE DENGAN PLACEHOLDER HISTORY
 # ==========================================
+"""
+# Ini adalah ilustrasi isi jeroan library LangChain
+MAPPING_ROLE = {
+    "system": SystemMessagePromptTemplate,
+    "human": HumanMessagePromptTemplate,
+    "user": HumanMessagePromptTemplate,       # Alias, biar fleksibel
+    "ai": AIMessagePromptTemplate,
+    "assistant": AIMessagePromptTemplate      # Alias juga
+}
+"""
+
+
+
 prompt = ChatPromptTemplate.from_messages([
     ("system", "Kamu adalah Lilim, AI Assistant yang ramah dan asyik diajak ngobrol."),
     # MessagesPlaceholder adalah "slot kosong" otomatis tempat LangChain menyelipkan 
@@ -92,7 +122,8 @@ prompt = ChatPromptTemplate.from_messages([
     MessagesPlaceholder(variable_name="riwayat_chat"),
     ("human", "{input}")
 ])
-
+print ("INI PROMPT")
+print (prompt)
 # ==========================================
 # 2. CHAT MODEL & PARSER (Sama seperti kemarin)
 # ==========================================
@@ -109,6 +140,7 @@ chain_dasar = prompt | model | parser
 # Di dunia nyata, ini bisa diganti dengan database SQLite/Redis agar awet.
 penyimpanan_memori = {}
 
+print (ChatMessageHistory)
 def ambil_riwayat_sesi(session_id: str):
     """Fungsi pembantu untuk mengambil atau membuat sesi obrolan baru berdasarkan ID"""
     if session_id not in penyimpanan_memori:
@@ -125,6 +157,44 @@ chain_dengan_memori = RunnableWithMessageHistory(
     history_messages_key="riwayat_chat" # Slot kosong di prompt template tadi
 )
 
+"""
+Di dalam RunnableWithMessageHistory, ada 4 parameter
+  utama yang WAJIB ada agar dia bisa bekerja:
+
+   1 chain_dengan_memori = RunnableWithMessageHistory(
+   2     runnable,                 # 1. Siapa yang mau
+     dibungkus?
+   3     get_session_history,      # 2. Gimana cara ambil
+     catatannya?
+   4     input_messages_key,       # 3. Yang mana pesan
+     dari user?
+   5     history_messages_key,      # 4. Taro di mana
+     riwayatnya di Prompt?
+   6     # output_messages_key     # (Opsional) Yang mana
+     jawaban AI-nya?
+   7 )
+"""
+print()
+print (" === INI CHAIN DENGAN MEMORI ===")
+print (chain_dengan_memori)
+
+# ==========================================
+# PENGERTIAN GAMBLANG: RunnableWithMessageHistory
+# ==========================================
+"""
+RunnableWithMessageHistory adalah "Bungkus Pintar" (Wrapper).
+Analogi: Seperti asisten pribadi yang memegang buku catatan.
+
+Gimana cara kerjanya secara gamblang?
+1. Saat kamu tanya, si Bungkus ini GAK langsung kasih ke AI.
+2. Dia buka buku catatan dulu, baca obrolan sebelumnya.
+3. Dia tempel obrolan lama itu ke pertanyaan baru kamu.
+4. Baru deh dia kasih ke AI.
+5. Begitu AI jawab, si Bungkus ini BURU-BURU nyatet jawaban itu ke buku catatan.
+
+Intinya: Dia bertugas "Suntik History" (sebelum jawab) dan "Catat Jawaban" (setelah jawab) secara otomatis.
+"""
+
 # ==========================================
 # 5. LOOP INTERAKTIF CHAT (SEPERTI CHATGPT ASLI)
 # ==========================================
@@ -133,7 +203,25 @@ if __name__ == "__main__":
     
     # ID Sesi unik, biar kalau ada user lain chat, ingatannya gak ketukar
     konfigurasi = {"configurable": {"session_id": "sesi_koding_kamu"}}
-    
+
+    """
+    STRUKTUR 'config' LANGCHAIN:
+    1. configurable: Wadah variabel kustom (seperti session_id).
+    2. tags: List label untuk filter/logging (ex: ["prod"]).
+    3. metadata: Info tambahan untuk audit (ex: user_id).
+    4. callbacks: Monitoring real-time (ex: LangSmith).
+    5. run_name: Nama unik untuk satu kali eksekusi.
+    6. recursion_limit: Batas maksimal looping (untuk AI Agent).
+
+    CONTOH:
+    config = {
+        "configurable": {"session_id": "sesi_1"},
+        "tags": ["test"],
+        "metadata": {"user": "budi"}
+    }
+    """
+    print()
+    print (konfigurasi)
     while True:
         user_input = input("\nKamu: ")
         if user_input.lower() == "keluar":
@@ -145,10 +233,14 @@ if __name__ == "__main__":
             
         # Panggil chain dengan mengirim input + ID Konfigurasi Sesi
         print("Lilim berpikir...")
+        
+        # Contoh penggunaan config lengkap
         jawaban = chain_dengan_memori.invoke(
             {"input": user_input},
-            config=konfigurasi
-        )
-        
+            config={
+                "configurable": {"session_id": "sesi_koding_kamu"}
+            }
         print(f"Lilim: {jawaban}")
-
+        print()
+        print ("=== INI PENYIMPANAN MEMORI ===")
+        print (penyimpanan_memori)
