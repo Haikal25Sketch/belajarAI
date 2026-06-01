@@ -109,9 +109,9 @@ def get_embeddings(text):
 
 
 
-PATH_FILE = "/storage/emulated/0/Download/IDN BROKEN STRINGS.pdf"
+PATH_FILE = "/storage/emulated/0/Download/8294.pdf"
 #Mengganti tempat menampung database dari json menjadi sqlite
-NAMA_DB_SQLITE = "Database_IDN BROKEN STRINGS.db"
+NAMA_DB_SQLITE = "Benoni.db"
 
 #Inisialisasi Database Sqlite
 koneksi = sqlite3.connect(NAMA_DB_SQLITE) # Membuka koneksi ke file database SQLite. Jika file database dengan nama tersebut belum ada, SQLite akan otomatis membuat file baru di direktori tersebut. Dibuat di awal script

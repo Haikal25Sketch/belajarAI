@@ -8250,3 +8250,99 @@
 2026-05-28 22:51:29,884 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 429 382
 2026-05-28 22:51:29,892 | ERROR|root | 
 [ERROR API]: Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kn8mxt9feqkrkvdj7adjn60d` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Used 6383, Requested 6199. Please try again in 2.91s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing
+2026-05-29 17:51:36,543 | INFO|root | Menutup database SQLite...
+2026-06-01 19:13:45,535 | INFO|root | Membuat database baru...
+2026-06-01 19:13:46,418 | INFO|root | DATA PDF BERHASIL DIMUAT (23 Halaman)...
+2026-06-01 19:13:46,421 | INFO|root | Memproses 23 chunk dengan sistem batching ke SQlite...
+2026-06-01 19:13:46,432 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:13:52,258 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 120617
+2026-06-01 19:13:52,506 | INFO|root | Progress SQlite: 15/23 selesai...
+2026-06-01 19:13:52,517 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:13:57,176 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 64339
+2026-06-01 19:13:57,261 | INFO|root | Progress SQlite: 23/23 selesai...
+2026-06-01 19:13:57,275 | INFO|root | Semua data berhasil disimpan ke SQLite.
+2026-06-01 19:14:00,128 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:14:01,163 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:14:49,849 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:14:51,238 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:15:22,685 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:15:23,429 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:15:23,433 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'Modern Benoni'}
+2026-06-01 19:15:23,433 | INFO|root | Mencari info di Database untuk query: Modern Benoni
+2026-06-01 19:15:23,438 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:15:28,924 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8050
+2026-06-01 19:15:28,976 | INFO|root | Skor tertinggi: 0.6345
+2026-06-01 19:15:28,977 | INFO|root | Menemukan 5 hasil relevan.
+2026-06-01 19:15:28,981 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:15:29,918 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:16:52,136 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:16:54,118 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:16:54,123 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'isi informasi tentang Benoni dalam database'}
+2026-06-01 19:16:54,124 | INFO|root | Mencari info di Database untuk query: isi informasi tentang Benoni dalam database
+2026-06-01 19:16:54,130 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:16:56,375 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8057
+2026-06-01 19:16:56,497 | INFO|root | Skor tertinggi: 0.1787
+2026-06-01 19:16:56,498 | INFO|root | Tidak ada hasil yang relevan di atas ambang batas.
+2026-06-01 19:16:56,507 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:16:57,397 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:17:39,136 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:17:39,716 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:17:39,719 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'pencipta Modern Benoni'}
+2026-06-01 19:17:39,720 | INFO|root | Mencari info di Database untuk query: pencipta Modern Benoni
+2026-06-01 19:17:39,724 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:17:44,810 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8042
+2026-06-01 19:17:44,919 | INFO|root | Skor tertinggi: 0.5745
+2026-06-01 19:17:44,920 | INFO|root | Menemukan 5 hasil relevan.
+2026-06-01 19:17:44,929 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:17:46,139 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:18:27,637 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:18:30,479 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:26:06,534 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:26:07,912 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:26:29,086 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:26:30,843 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:26:51,984 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:26:53,166 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:31:15,363 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:31:16,493 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:31:30,696 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:31:32,106 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:32:09,462 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:32:10,405 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:34:48,735 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:34:49,919 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:35:38,403 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:35:39,573 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:35:59,795 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:36:01,730 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:36:01,733 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'Benoni Defense'}
+2026-06-01 19:36:01,734 | INFO|root | Mencari info di Database untuk query: Benoni Defense
+2026-06-01 19:36:01,738 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:36:02,512 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8045
+2026-06-01 19:36:02,665 | INFO|root | Skor tertinggi: 0.6475
+2026-06-01 19:36:02,666 | INFO|root | Menemukan 5 hasil relevan.
+2026-06-01 19:36:02,674 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:36:03,983 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:36:31,324 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:36:32,452 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:36:32,459 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'kelebihan Benoni Defense'}
+2026-06-01 19:36:32,460 | INFO|root | Mencari info di Database untuk query: kelebihan Benoni Defense
+2026-06-01 19:36:32,467 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:36:32,965 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8068
+2026-06-01 19:36:33,085 | INFO|root | Skor tertinggi: 0.5590
+2026-06-01 19:36:33,086 | INFO|root | Menemukan 5 hasil relevan.
+2026-06-01 19:36:33,096 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:36:34,499 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:37:10,590 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:37:12,080 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 200 None
+2026-06-01 19:37:12,084 | INFO|root | Memanggil tool: cari_database dengan argumen: {'query': 'cara menutup kelemahan Benoni Defense'}
+2026-06-01 19:37:12,084 | INFO|root | Mencari info di Database untuk query: cara menutup kelemahan Benoni Defense
+2026-06-01 19:37:12,088 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): router.huggingface.co:443
+2026-06-01 19:37:12,658 | DEBUG|urllib3.connectionpool | https://router.huggingface.co:443 "POST /hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction HTTP/1.1" 200 8040
+2026-06-01 19:37:12,710 | INFO|root | Skor tertinggi: 0.4622
+2026-06-01 19:37:12,710 | INFO|root | Menemukan 5 hasil relevan.
+2026-06-01 19:37:12,717 | DEBUG|urllib3.connectionpool | Starting new HTTPS connection (1): api.groq.com:443
+2026-06-01 19:37:12,943 | DEBUG|urllib3.connectionpool | https://api.groq.com:443 "POST /openai/v1/chat/completions HTTP/1.1" 429 388
+2026-06-01 19:37:12,954 | ERROR|root | 
+[ERROR API]: Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kn8mxt9feqkrkvdj7adjn60d` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 97298, Requested 9088. Please try again in 1h31m57.504s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing
+2026-06-01 19:40:37,553 | INFO|root | Menutup database SQLite...

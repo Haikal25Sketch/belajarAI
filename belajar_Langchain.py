@@ -30,7 +30,7 @@ adalah sebuah pustaka (framework) yang menyatukan semua proses ribet
 
 (memotong teks,memanggil API dengan requests.post,mengelola riwayat pesan,mengatur looping untuk mendeteksi tool_calls dll...)
 
-menjadi komponen-komponen siap pakai seperti lego.
+menjadi komponen-komponen siap pakai seperti lego hanya dengan menggunakan |
 
 KOMPONEN UTAMA LANGCHAIN YANG DIGUNAKAN:
 1. ChatPromptTemplate: Mengatur struktur pesan (System, Human, AI).
@@ -193,6 +193,12 @@ Gimana cara kerjanya secara gamblang?
 5. Begitu AI jawab, si Bungkus ini BURU-BURU nyatet jawaban itu ke buku catatan.
 
 Intinya: Dia bertugas "Suntik History" (sebelum jawab) dan "Catat Jawaban" (setelah jawab) secara otomatis.
+
+ALUR 'configurable' KE 'get_session_history':
+1. USER: Kirim ID Sesi lewat `invoke(..., config={"configurable": {"session_id": "ID_KAMU"}})`
+2. LANGCHAIN: Nangkap "ID_KAMU" dari dalam paket `configurable`.
+3. LANGCHAIN: Oper "ID_KAMU" tadi ke dalam parameter fungsi `get_session_history(session_id)`.
+4. FUNGSI: Balikin objek history yang sesuai dengan ID tersebut.
 """
 
 # ==========================================
@@ -231,7 +237,6 @@ if __name__ == "__main__":
         if not user_input.strip():
             continue
             
-        # Panggil chain dengan mengirim input + ID Konfigurasi Sesi
         print("Lilim berpikir...")
         
         # Contoh penggunaan config lengkap
@@ -240,6 +245,7 @@ if __name__ == "__main__":
             config={
                 "configurable": {"session_id": "sesi_koding_kamu"}
             }
+            )
         print(f"Lilim: {jawaban}")
         print()
         print ("=== INI PENYIMPANAN MEMORI ===")
