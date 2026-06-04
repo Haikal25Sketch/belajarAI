@@ -66,6 +66,7 @@ parser = StrOutputParser()
 # Menggunakan syntax LCEL: input -> prompt -> model -> parser -> output
 # Ini membuat kode lebih modular dan mudah dibaca.
 chain = prompt | model | parser
+print (chain)
 
 # 6. EKSEKUSI (Menjalankan Program)
 def jalankan_tutorial():

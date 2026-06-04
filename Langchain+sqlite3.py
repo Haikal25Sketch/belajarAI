@@ -68,9 +68,12 @@ model = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
 
 # BERIKAN ALAT KE AI / RAKIT AGENT OTOMATIS
 # lilim_assistant: Rencana/Instruksi (Otak)
+# Tool yang diletakkan disini berfungsi agar si otak yaitu Lilim atau AI tahu bahwa alat itu ada dan bagaimana cara menggunakannya
 lilim_assistant = create_openai_tools_agent(model, daftar_tools, prompt)
+
 # eksekutor_agent: Tubuh/Manajer yang menjalankan instruksi & alat
-eksekutor_agent = AgentExecutor(agent=lilim_assistant, tools=daftar_tools, verbose=True)
+#Tool yang diletakkan disini dilakukan agar python bisa mengekekusi fungsi kodingan 
+eksekutor_agent = AgentExecutor(agent=lilim_assistant, tools=daftar_tools, verbose=False)
 
 """
 PENGERTIAN GAMBLANG: Agent Executor
@@ -107,6 +110,23 @@ agent_dengan_memori = RunnableWithMessageHistory(
     history_messages_key="riwayat_chat"
 )
 
+"""
+Di dalam RunnableWithMessageHistory, ada 4 parameter
+  utama yang WAJIB ada agar dia bisa bekerja:
+
+   1 agent_dengan_memori = RunnableWithMessageHistory(
+   2     runnable,                 # 1. Siapa yang mau
+     dibungkus?
+   3     get_session_history,      # 2. Gimana cara ambil
+     catatannya?
+   4     input_messages_key,       # 3. Yang mana pesan
+     dari user?
+   5     history_messages_key,      # 4. Taro di mana
+     riwayatnya di Prompt?
+   6     # output_messages_key     # (Opsional) Yang mana
+     jawaban AI-nya?
+   7 )
+"""
 # ==========================================
 # PENGERTIAN ALUR: configurable -> get_session_history
 # ==========================================
@@ -123,7 +143,7 @@ Gimana ID Sesi dari invoke() bisa nyampe ke fungsi ambil_riwayat?
 # 4. LOOP INTERAKTIF CHAT
 # ==========================================
 if __name__ == "__main__":
-    print("=== LILIM DENGAN PERMANENT SQLITE READY ===")
+    print("=== LILIM ASSISTANT READY ===")
     konfigurasi = {"configurable": {"session_id": "Haikal_session"}}
     
     while True:
@@ -140,6 +160,30 @@ if __name__ == "__main__":
             {"input": user_input},
             config=konfigurasi
         )
+        print (jawaban)
         
         # Output Agent adalah dictionary, jawaban aslinya ada di key 'output'
         print(f"Lilim: {jawaban['output']}")
+
+# ============================================================
+# RINGKASAN MATERI: AGENT + SQLITE MEMORY
+# ============================================================
+# 1. @tool: Dekorator untuk mengubah fungsi Python biasa menjad
+#    alat yang bisa dimengerti dan dipanggil oleh AI.
+
+# 2. create_openai_tools_agent: Membuat "Otak" Agent yang bisa 
+#    merencanakan penggunaan alat berdasarkan instruksi Prompt.
+
+# 3. AgentExecutor: "Tubuh" yang mengeksekusi rencana Agent dan
+#    menjalankan fungsi tool secara nyata.
+
+# 4. SQLChatMessageHistory: Modul untuk menyimpan riwayat chat 
+#    secara permanen ke dalam database SQLite (.db).
+
+# 5. RunnableWithMessageHistory: Pembungkus (Wrapper) tingkat tinggi 
+
+#    yang otomatis mengelola load/save riwayat chat berdasarkan session_id.
+
+# 6. agent_dengan_memori: Hasil akhir evolusi chain yang memiliki 
+#    kemampuan berpikir (LLM), bertindak (Tools), dan mengingat (SQLite).
+# ============================================================
