@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: lilim-ai-assistant
+    runtime: docker
+    dockerFilePath: Ai-Assistant/Dockerfile
+    dockerContext: Ai-Assistant
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+        placeholder: "Isi dengan API Key Groq Anda"
+      - key: HUGGINGFACE_TOKEN
+        sync: false
+        placeholder: "Isi dengan Token HuggingFace Anda"
