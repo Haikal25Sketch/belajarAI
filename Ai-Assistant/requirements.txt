@@ -6,7 +6,6 @@ aiosqlite==0.21.0
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
-aria-agent @ git+https://github.com/Alex72-py/aria-termux.git@b4340ad99cb66ff21fdc3ec4039bdc993c42d7af
 attrs==26.1.0
 backoff==2.2.1
 certifi==2026.2.25
@@ -14,7 +13,7 @@ cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.4.1
 ConfigArgParse==1.7.5
-cryptography @ file:///home/builder/.termux-build/python-cryptography/src
+cryptography
 diskcache==5.6.3
 distro==1.9.0
 dotenv==0.9.9
@@ -52,7 +51,7 @@ mdurl==0.1.2
 msgspec==0.21.1
 multidict==6.7.1
 networkx==3.6.1
-numpy @ file:///home/builder/.termux-build/python-numpy/src/dist/numpy-2.4.4-cp313-cp313-android_aarch64.whl#sha256=b9a4731d6bfc5c469dd2fd61e327c90748ee544201108b102775549269faeda3
+numpy==2.2.1
 openai==2.38.0
 orjson==3.11.9
 ormsgpack==1.12.2
@@ -60,7 +59,6 @@ packaging==26.2
 pinecone==9.0.1
 pinecone-plugin-interface==0.0.7
 prompt_toolkit==3.0.52
-proot-distro @ file:///home/builder/.termux-build/proot-distro/src
 propcache==0.5.2
 pycparser==3.0
 pydantic==2.13.4
@@ -74,7 +72,7 @@ PyYAML==6.0.3
 requests==2.33.1
 requests-toolbelt==1.0.0
 rich==15.0.0
-scipy @ file:///home/builder/.termux-build/python-scipy/src/dist/scipy-1.17.1-cp313-cp313-android_aarch64.whl#sha256=983a3b6ea280209902b8cc8c5c47d881237522224142999ddf2c8e084ffb2db3
+scipy
 setuptools==82.0.1
 six==1.17.0
 smmap==5.0.3
